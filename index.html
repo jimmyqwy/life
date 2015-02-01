@@ -1,9 +1,11 @@
 <html>
 <head>
     <title>Let's go party!</title>
-    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/svg.css" rel="stylesheet">
     <script src="js/jquery-1.11.2.min.js"></script>
     <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/angular-ui-router.min.js"></script>
 
     <link href="lib/datepicker/jquery.datepick.css" rel="stylesheet">
     <script src="lib/datepicker/jquery.plugin.js"></script>
@@ -19,83 +21,104 @@
         .glyphicon-thumbs-up { cursor:pointer } 
     </style>
 </head>
-<body id="angularBody" ng-app="betterLife" ng-controller="MainCtrl">
+<body id="angularBody" ng-app="betterLife">
     <div class="row">
         <div class="col-xs-6  col-xs-offset-3 col-md-6 col-md-offset-3">
-            <div class="page-header">
-                <h1> Let's go party! </h1>
-            </div>
-            <form ng-submit = "addTopic()">
-                <h4>Topic</h4>
-                <div class="form-group">
-                    <input type="text"
-                        class="form-control"
-                        placeholder="Title of topic" 
-                        ng-model="topicTitle">
-                    </input>
-                </div>
-
-                <h4>Description</h4>
-                <div class="form-group">
-                    <textarea rows="10" 
-                        class="form-control"
-                        placeholder="Details" 
-                        style="resize:none" 
-                        ng-model="topicDescription">
-                    </textarea>
-                </div>
-
-                <h4>Candidates Date </h4>
-                <div class="form-group">
-                    <textarea  
-                        id="inlineDatepicker"
-                        name="input_candDate" 
-                        class="embed form-control"  
-                        style="resize:none" 
-                        rows = "3"
-                        cols = "30">
-                    </textarea>
-                    <div style="display:none;">
-                        <img id="calImg" src="img/calendar-green.gif" alt="Popup" class="trigger datepick-trigger"> 
-                    </div>
-                </div>
-            
-               <button type="submit">Confirm</button>    
-            </form> 
-            
-            <p></p>
-            {{topicTitle}}<br>
-            {{topicDescription}}  <br>
-            <ul name="list_candDate" style="list-style-type:none">
-                <li ng-repeat="date in candidateDates track by $index">
-                    {{date}}
-                </li>
-            </ul>
-            <table border='1'>
-                <tr>
-                    <th> Name </th>
-                    <th ng-repeat="date in candidateDates track by $index"> 
-                        {{getFullDate(date)}}
-                    </th>
-                    <th> Comments </th>
-                </tr>
-                <tr ng-repeat="member in members | orderBy: '-id' ">
-                    <td>
-                        {{member.id}}
-                    </td>
-                    <td ng-repeat="date in candidateDates track by $index"> 
-                         select: {{member.attendance[$index]}}
-                    </td>
-                    <td ng-if="hasComment(member)">
-                        {{member.comments}}
-                    </td>
-                    <td ng-if="!hasComment(member)">
-                        Please add your comments.
-                    </td>
-                </tr>
-                
-            </table>
+            <ui-view></ui-view>
+            <!--Whenever ui-router detects a route change, it will place the new state's template inside the tag and initialize the controller we specified in our state configuration. -->
         </div>
     </div>
+
+    <script type="text/ng-template" id="/home.html">
+        <div class="page-header">
+            <h1> Let's go party! </h1>
+        </div>
+        <form ng-submit = "addTopic()">
+            <h4>
+                <svg width='10' height='10'>
+                    <circle cx='5' cy='4' r='3' class='bluedot'/>
+                </svg>
+                Topic
+            </h4>
+            <div class="form-group">
+                <input type="text"
+                    class="form-control"
+                    placeholder="Title of topic" 
+                    ng-model="topicTitle">
+                </input>
+            </div>
+
+            <h4>
+                <svg width='10' height='10'>
+                    <circle cx='5' cy='4' r='3' class='bluedot'/>
+                </svg>
+                Description
+            </h4>
+            <div class="form-group">
+                <textarea rows="10" 
+                    class="form-control"
+                    placeholder="Details" 
+                    style="resize:none" 
+                    ng-model="topicDescription">
+                </textarea>
+            </div>
+
+            <h4>
+                <svg width='10' height='10'>
+                    <circle cx='5' cy='5' r='3' class='bluedot'/>
+                </svg>
+                Candidates Date 
+            </h4>
+            <div class="form-group">
+                <textarea  
+                    id="inlineDatepicker"
+                    name="input_candDate" 
+                    class="embed form-control"  
+                    style="resize:none" 
+                    rows = "2"
+                    cols = "30">
+                </textarea>
+                <div style="display:none;">
+                    <img id="calImg" src="img/calendar-green.gif" alt="Popup" class="trigger datepick-trigger"> 
+                </div>
+            </div>
+        
+           <button type="submit">Confirm</button>    
+        </form> 
+        
+        <p></p>
+        {{topicTitle}}<br>
+        {{topicDescription}}  <br>
+        <ul name="list_candDate" style="list-style-type:none">
+            <li ng-repeat="date in candidateDates track by $index">
+                {{date}}
+            </li>
+        </ul>
+        <table border='1'>
+            <tr>
+                <th> Name </th>
+                <th ng-repeat="date in candidateDates track by $index"> 
+                    {{getFullDate(date)}}
+                </th>
+                <th> Comments </th>
+            </tr>
+            <tr ng-repeat="member in members | orderBy: '-id' ">
+                <td>
+                    {{member.id}}
+                </td>
+                <td ng-repeat="date in candidateDates track by $index"> 
+                     select: {{member.attendance[$index]}}
+                </td>
+                <td ng-if="hasComment(member)">
+                    {{member.comments}}
+                </td>
+                <td ng-if="!hasComment(member)">
+                    Please add your comments.
+                </td>
+            </tr>
+            
+        </table>
+    </script>
+
 </body>
 </html>

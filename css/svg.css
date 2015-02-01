@@ -1,0 +1,11 @@
+svg .bluedot
+{
+    fill: rgba(0, 0, 255, 0.75);
+}
+
+svg .strokecircle
+{
+    fill: blue;
+    stroke: orange;
+    stroke-width: 1;
+}

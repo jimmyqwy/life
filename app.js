@@ -8,15 +8,8 @@ WEEKDAY[4] = "Thur.";
 WEEKDAY[5] = "Fri.";
 WEEKDAY[6] = "Sat.";
 
-angular.module('betterLife',[])
-.controller('MainCtrl', [
-    '$scope',
-    function($scope) {
-        $scope.topicTitle = "";
-        $scope.topicDescription = "";
-        $scope.candidateDates=[];
-        $scope.members = [];
-        /*
+// memo , topic/ member data structure
+/*
         $scope.members = [
             {id: 'post 5', attendance:  [-1, 0, 1], comments: 'test'},
             {id: 'post 2', attendance:  [1, 1, 1], comments: 'test'},
@@ -24,7 +17,52 @@ angular.module('betterLife',[])
             {id: 'post 3', attendance:  [1, 1, 1], comments: 'test'},
             {id: 'post 4', attendance:  [0, 1, -1], comments: ''}
         ];
-        */
+*/
+
+angular.module('betterLife',['ui.router'])   // [] dependency ui.router
+.config([
+    '$stateProvider',
+    '$urlRouterProvider',
+    function($stateProvider, $urlRouterProvider) {
+        $stateProvider
+            .state('home', {
+              url: '/home',
+              templateUrl: '/home.html',
+              controller: 'MainCtrl'
+            });
+        $urlRouterProvider.otherwise('home');
+}])
+.factory('topic', [function(){
+    var o = {
+        title: "",
+        topicDescription : "",
+        candidateDates : [],
+        members: []
+    };
+    return o;
+}])
+.controller('MainCtrl', [
+    '$scope',
+    'topic',
+    function($scope, topic) {
+        $scope.topicTitle = topic.title; //"";
+        $scope.topicDescription = topic.topicDescription; //"";
+        $scope.candidateDates= topic.candidateDates; //[];
+        $scope.members = topic.members; //[];
+
+        $scope.load = function() {
+            // all jquery should do after angular scope loaded
+            $(function() {
+                $('#inlineDatepicker').datepick(
+                    {
+                        multiSelect:999,
+                        monthsToShow:2,
+                        //showTrigger: '#calImg',
+                        //onSelect: angular.element('#angularBody').scope().selectDate
+                        onSelect: $scope.selectDate
+                    });
+            });
+        };
 
         $scope.hasComment = function(member) {
             if (member.comments === "" ||!member ) {
@@ -94,17 +132,11 @@ angular.module('betterLife',[])
                 $scope.members.push(newMember);
             }
         };
+
+        // load 
+        $scope.load();
     }
 ]);
 
 
-$(function() {
-    $('#inlineDatepicker').datepick(
-        {
-            multiSelect:999,
-            monthsToShow:2,
-            //showTrigger: '#calImg',
-            onSelect: angular.element('#angularBody').scope().selectDate
-        });
-});
 
