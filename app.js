@@ -19,7 +19,11 @@ WEEKDAY[6] = "Sat.";
         ];
 */
 
-angular.module('betterLife',['ui.router'])   // [] dependency ui.router
+// [] dependency ui.router
+MyApp = angular.module('betterLife',['ui.router']) ;
+
+// config -> html template
+MyApp
 .config([
     '$stateProvider',
     '$urlRouterProvider',
@@ -30,28 +34,86 @@ angular.module('betterLife',['ui.router'])   // [] dependency ui.router
               templateUrl: '/home.html',
               controller: 'MainCtrl'
             });
+        $stateProvider
+            .state('topics', {
+              url: '/topics/{id}',
+              templateUrl: '/topics.html',
+              controller: 'TopicsCtrl'
+            });
         $urlRouterProvider.otherwise('home');
-}])
-.factory('topic', [function(){
-    var o = {
-        title: "",
-        topicDescription : "",
-        candidateDates : [],
-        members: []
-    };
-    return o;
-}])
-.controller('MainCtrl', [
+    }
+]);
+
+// topics factory
+MyApp.factory('topicsFactory',
+        function() {
+            var service = {};
+
+            // Data structure
+            // {ID: { title / description / candidateDates / members } }
+            // members: memberID / attendance / comments
+            var _topics = {};
+
+            var isValidID = function(id) {
+                 if ( id in _topics ) {
+                    return true;
+                }
+                return false;
+            };
+
+            service.getTopicVolume = function () {
+                return Object.keys(_topics).length;
+            };
+
+             // get attributes from a specific topicID
+            service.getTopic = function(topicID) {
+                if ( isValidID(topicID) ) {
+                    return _topics[topicID];
+                }
+            };
+
+            service.addTopic = function(id, title, description, candidateDates) {
+                var newTopic = {
+                    title : title,
+                    desc: description,
+                    dates: candidateDates,
+                    members: []
+                };
+                _topics[id] = newTopic;
+                return newTopic;
+            };
+
+            service.deleteTopic = function(topicID) {
+                if ( isValidID(topicID) ) {
+                    //_topics.splice(id, 1) ;      //  remove the element
+                    delete _topics[topicID];
+                }
+            };
+
+            // add members for a specific topic
+            service.addMembers = function ( topicID, members ) {
+                if ( isValidID(topicID) ) {
+                    _topics[topicID].members = members;
+                }
+            };
+            return service;
+        }
+);
+
+// MainCtrl with home url , and pattern
+MyApp.controller('MainCtrl', [
     '$scope',
-    'topic',
-    function($scope, topic) {
-        $scope.topicTitle = topic.title; //"";
-        $scope.topicDescription = topic.topicDescription; //"";
-        $scope.candidateDates= topic.candidateDates; //[];
-        $scope.members = topic.members; //[];
+    '$state',
+    'topicsFactory',
+    function($scope, $state, topicsFactory) {
+        
+        $scope.topicTitle = "";
+        $scope.topicDescription = "";
+        $scope.candidateDates= [];
+        $scope.members = [];
 
         $scope.load = function() {
-            // all jquery should do after angular scope loaded
+            // all jquery could be avaiable after angular scope loaded
             $(function() {
                 $('#inlineDatepicker').datepick(
                     {
@@ -62,20 +124,18 @@ angular.module('betterLife',['ui.router'])   // [] dependency ui.router
                         onSelect: $scope.selectDate
                     });
             });
-        };
-
-        $scope.hasComment = function(member) {
-            if (member.comments === "" ||!member ) {
-                return false;
-            }
-            return true;
+            //d3.select("body").append("p").text("aaaabbbbetste");
         };
 
         $scope.addTopic = function () {
-            if (!$scope.topicTitle || $scope.title === '' )  {  return ;    }
-            $scope.addTitle($scope.topicTitle);
-            $scope.addDesciption($scope.topicDescription);
-            $scope.addMember();
+            if ( !$scope.topicTitle )  {  return ;    }
+            $scope.topicID = topicsFactory.getTopicVolume() + 1;
+            
+            topicsFactory.addTopic($scope.topicID.toString(), $scope.topicTitle,
+                $scope.topicDescription, $scope.candidateDates);
+
+            // go to 'topics' template view  -> members
+            $state.go('topics', {'id' : $scope.topicID});
         };
 
         $scope.selectDate = function(dates) {
@@ -90,53 +150,72 @@ angular.module('betterLife',['ui.router'])   // [] dependency ui.router
             //console.log($scope.candidateDates);
         };
 
+        // load 
+        $scope.load();
+    }
+]);
+
+// PostCtrl with url: '/topics/{id}', adn topics.html template
+MyApp.controller('TopicsCtrl', [
+    '$scope',
+    '$stateParams',
+    'topicsFactory',
+    function($scope, $stateParams, topicsFactory) {
+        $scope.topicID = $stateParams.id;
+        $scope.topic = topicsFactory.getTopic($scope.topicID);
+
+        $scope.load = function() {
+            //
+        };
+
         $scope.getFullDate = function (date) {
             //console.log(date);
             var weekday = WEEKDAY[new Date(date).getDay()];
             return date + " (" + weekday + ")";
         };
 
-        $scope.addTitle = function (title) {
-            $scope.title = title;
-        };
-
-        $scope.addDesciption = function (desc) {
-            $scope.desc = desc;
+        $scope.hasComment = function(member) {
+            if (member.comments === "" ||!member ) {
+                return false;
+            }
+            return true;
         };
 
         $scope.initialAttendance = function () {
             var attendances = [];
-            for ( var dateIdx  in $scope.candidateDates) {
-                attendances.push(-1);
+            for ( var dateIdx  in $scope.topic.dates) {
+                attendances.push(1);
             }
             return attendances;
         };
 
-        $scope.addMember = function() {
+        $scope.addMember = function( MemberName ) {
             // Change to model call
-            var memberID = $scope.members.length;
+            var memberID = $scope.topic.members.length;
             var newMember = {
-                id: memberID + 1,
+                memID: memberID + 1,
+                name : MemberName,
                 attendance : $scope.initialAttendance(),
                 comments: "Thank you "
             };
 
             var found = false;
-            for ( var memberIdx in $scope.members) {
-                if (newMember.id == $scope.members[memberIdx].id)  {
+            for ( var memberIdx in $scope.topic.members) {
+                if (newMember.memID == $scope.topic.members[memberIdx].memID)  {
                     console.log("Member Found!");
                     found = true;
                 }
             }
             if (!found) {
-                $scope.members.push(newMember);
+                $scope.topic.members.push(newMember);
             }
+            return newMember;
         };
 
-        // load 
+        // Add adminstrator
+        // topicsFactory.topic have referece to current $scope.topic
+        // add members will also add to topicFactory
+        $scope.adminMember = $scope.addMember("Admin");
         $scope.load();
     }
 ]);
-
-
-

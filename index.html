@@ -6,6 +6,7 @@
     <script src="js/jquery-1.11.2.min.js"></script>
     <script type="text/javascript" src="js/angular.min.js"></script>
     <script type="text/javascript" src="js/angular-ui-router.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
 
     <link href="lib/datepicker/jquery.datepick.css" rel="stylesheet">
     <script src="lib/datepicker/jquery.plugin.js"></script>
@@ -83,30 +84,62 @@
                 </div>
             </div>
         
-           <button type="submit">Confirm</button>    
+           <button type="submit">Create</button>    
         </form> 
-        
-        <p></p>
-        {{topicTitle}}<br>
-        {{topicDescription}}  <br>
+    </script>
+
+    <script type="text/ng-template" id="/topics.html">
+        <div class="page-header">
+            <h1> Let's go party! </h1>
+        </div>
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            {{topic.title}}
+        </h4>
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            Description
+        </h4>
+       <p>
+            {{topic.desc}}
+        </p>
+
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            Candidate Dates
+        </h4>
         <ul name="list_candDate" style="list-style-type:none">
-            <li ng-repeat="date in candidateDates track by $index">
-                {{date}}
+            <li ng-repeat="date in topic.dates track by $index">
+                {{getFullDate(date)}}
             </li>
         </ul>
+        
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            Members
+        </h4>
+
         <table border='1'>
             <tr>
                 <th> Name </th>
-                <th ng-repeat="date in candidateDates track by $index"> 
+                <th ng-repeat="date in topic.dates track by $index">
                     {{getFullDate(date)}}
                 </th>
                 <th> Comments </th>
             </tr>
-            <tr ng-repeat="member in members | orderBy: '-id' ">
+            <tr ng-repeat="member in topic.members ">
                 <td>
-                    {{member.id}}
+                    {{member.name}}
                 </td>
-                <td ng-repeat="date in candidateDates track by $index"> 
+                <td ng-repeat="date in topic.dates track by $index">
                      select: {{member.attendance[$index]}}
                 </td>
                 <td ng-if="hasComment(member)">
