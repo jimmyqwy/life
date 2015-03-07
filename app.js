@@ -23,6 +23,7 @@ WEEKDAY[6] = "Sat.";
 MyApp = angular.module('betterLife',['ui.router','ui.bootstrap']) ;
 
 // config -> html template
+// use ui.router and set status (templateURL <-> controller)
 MyApp
 .config([
     '$stateProvider',
@@ -168,29 +169,7 @@ MyApp.controller('TopicsCtrl', [
 
         $scope.load = function() {
             $(function() {
-                function endEdit(e) {
-                    var input = $(e.target),
-                        label = input && input.prev();
-
-                    label.text(input.val() === '' ? defaultText : input.val());
-                    input.hide();
-                    label.show();
-                }
-
-                $('#clickedit').hide()
-                .focusout(endEdit)
-                .keyup(function (e) {
-                    if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
-                        endEdit(e);
-                        return false;
-                    } else {
-                        return true;
-                    }
-                })
-                .prev().click(function () {
-                    $(this).hide();
-                    $(this).next().show().focus();
-                });
+                // action after loading the ng  models
             });
         };
 
@@ -201,44 +180,34 @@ MyApp.controller('TopicsCtrl', [
         };
 
         $scope.hasComment = function(member) {
-            if (member.comments === "" ||!member ) {
+            if (!member || !member.comments || member.comments === "" ) {
                 return false;
             }
             return true;
         };
 
-        $scope.initialAttendance = function () {
-            var attendances = [];
-            for ( var dateIdx  in $scope.topic.dates) {
-                var att = Math.floor((Math.random() * 3) -1);
-                attendances.push(att);
-                console.log(att);
+        $scope.initialAttendance = function (selectedResults) {
+            if ($scope.topic.dates.length != selectedResults.length) {
+                console.log("ERROR! Some dates are missing to be selected.");
+                alert("ERROR! Some dates are missing to be selected.");
+            } else {
+                var attendances = [];
+                for ( var dateIdx  in $scope.topic.dates) {
+                    //var att = Math.floor((Math.random() * 3) -1);
+                    var att = selectedResults[dateIdx];
+                    attendances.push(att);
+                    console.log(att);
+                }
+                return attendances;
             }
-            return attendances;
         };
 
-        $scope.addMember = function( MemberName ) {
-            // Change to model call
-            var memberID = $scope.topic.members.length;
-            var newMember = {
-                memID: memberID + 1,
-                name : MemberName,
-                attendance : $scope.initialAttendance(),
-                comments: "Thank you "
-            };
-
-            var found = false;
-            for ( var memberIdx in $scope.topic.members) {
-                if (newMember.memID == $scope.topic.members[memberIdx].memID)  {
-                    console.log("Member Found!");
-                    found = true;
-                }
-            }
-            if (!found) {
-                $scope.topic.members.push(newMember);
-            }
+        /*
+        $scope.addMember = function(newMember) {
+           
             return newMember;
         };
+        */
 
         $scope.addJoinMember = function (size) {
             var modalInstance = $modal.open({
@@ -246,15 +215,30 @@ MyApp.controller('TopicsCtrl', [
               controller: 'MemberModalInstanceCtrl',
               size: size,
               resolve: {
+                topicID: function() {
+                    return $scope.topicID;
+                }, 
+                currentMembers: function() {
+                    return $scope.topic.members;
+                },
                 candidateDates: function () {
                     return $scope.topic.dates;
                 }
               }
             });
 
-            modalInstance.result.then(function (selectedResults) {
-              $scope.selectedResults = selectedResults;
-              console.log($scope.selectedResults);
+            modalInstance.result.then(
+                function (selectedResults) {
+                    // create a new member object
+                    var memberID = $scope.topic.members.length;
+                    var newMember = {
+                        memID: memberID + 1,
+                        name : selectedResults[0],
+                        attendance : $scope.initialAttendance(selectedResults[1]),
+                        comments: selectedResults[2]
+                    };
+                    // $scope.addMember(newMember);
+                    $scope.topic.members.push(newMember);
             }, function () {
               console.info('Modal dismissed at: ' + new Date());
             });
@@ -263,39 +247,100 @@ MyApp.controller('TopicsCtrl', [
         // Add adminstrator
         // topicsFactory.topic have referece to current $scope.topic
         // add members will also add to topicFactory
-        $scope.adminMember = $scope.addMember("Admin");
+        // $scope.adminMember = $scope.addMember("Admin");
         $scope.load();
     }
 ]);
 
 
 MyApp.controller('MemberModalInstanceCtrl',
-    function ($scope, $modalInstance, candidateDates) {
+    function ($scope, $modalInstance, topicID, currentMembers, candidateDates) {
+        $scope.topicID = topicID;
+        $scope.currentMembers = currentMembers;
         $scope.candidateDates = candidateDates;
         $scope.selections = [];
-        for (var date in candidateDates) {
+        for (var idx = 0; idx < candidateDates.length; idx++ ) {
             $scope.selections.push({
-                date : date,
-                selected: 0
+                date : candidateDates[idx],
+                willing: 'OK'
             });
         }
-       /*
-        $scope.candidateDates = candidateDates;
-        $scope.selected = {
-        item: $scope.items[0]
-        };
-        */
+     
          $scope.getFullDate = function (date) {
             //console.log(date);
             var weekday = WEEKDAY[new Date(date).getDay()];
             return date + " (" + weekday + ")";
         };
 
+        var memberExist = function(memberName) {
+            var found = false;
+            for ( var memberIdx in $scope.currentMembers) {
+                if (memberName == $scope.currentMembers[memberIdx].name)  {
+                    console.log("Member Found!");
+                    found = true;
+                }
+            }
+            return found;
+        };
+
+        var encodeSelect = function (labelSelections) {
+            var willingResults = [];
+            for (var idx = 0; idx < labelSelections.length; idx++) {
+                if ( labelSelections[idx].willing == 'OK' ) {
+                    willingResults.push(1);
+                } else if ( labelSelections[idx].willing == 'MIDDLE' ) {
+                    willingResults.push(0);
+                } else {
+                    willingResults.push(-1);
+                }
+            }
+            return willingResults;
+        };
+
         $scope.ok = function () {
-            $modalInstance.close($scope.selections);
+            if (memberExist($scope.memberName) === true) {
+                alert("Nick name is already used... \nPlease choose another one!");
+            } else {
+                var willingResults = encodeSelect($scope.selections);
+                $modalInstance.close([$scope.memberName,
+                                                        willingResults,
+                                                        $scope.memberComment]);
+            }
         };
 
         $scope.cancel = function () {
             $modalInstance.dismiss('cancel');
         };
 });
+
+
+MyApp.directive('uniqueUsername',[
+    '$http',
+    'topicsFactory',
+    function($http, topicsFactory) {
+        return {
+            restrict: 'A',
+            require: 'ngModel',
+            link: function (scope, element, attrs, ngModel) {
+                function validate(value) {
+                     var topic = topicsFactory.getTopic(scope.topicID);
+                     var found = false;
+                     for ( var memberIdx in topic.members) {
+                            if (ngModel.$viewValue == topic.members[memberIdx].name)  {
+                                console.log("Member Found!");
+                                found = true;
+                            }
+                        }
+                    if (topic.members && !found) {
+                        ngModel.$setValidity('unique', true);
+                    } else {
+                        ngModel.$setValidity('unique', false);
+                    }
+                }
+                scope.$watch( function() {
+                  return ngModel.$viewValue;
+                }, validate);
+            }
+      };
+    }
+]);

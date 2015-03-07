@@ -16,6 +16,7 @@
     <script src="lib/datepicker/jquery.datepick.js"></script>
 
     <script type="text/javascript" src="app.js"></script>
+    <script type="text/javascript" src="lifedirectives.js"></script>
 
     <style type="text/css">
         .embed + img { position: relative; left: 0px; top: 0px; }
@@ -127,7 +128,7 @@
             </svg>
             Candidate Dates
         </h4>
-        <ul name="list_candDate" style="list-style-type:none">
+        <ul name="list_candDate" style="list-style-type:none; padding-left:0">
             <li ng-repeat="date in topic.dates track by $index">
                 {{getFullDate(date)}}
             </li>
@@ -155,7 +156,6 @@
                 <th ng-repeat="date in topic.dates track by $index">
                     {{getFullDate(date)}}
                 </th>
-                <th> Comments </th>
             </tr>
             <tr ng-repeat="member in topic.members ">
                 <td>
@@ -179,15 +179,23 @@
                     </div>
                      <!--<div class="btn-group"></div>-->
                 </td>
-                <td ng-if="hasComment(member)">
-                    <label class="mylabel">{{member.comments}}</label>
-                    <input id="clickedit" type="text" />
-                </td>
-                <td ng-if="!hasComment(member)">
-                    Please add your comments.
-                </td>
             </tr>            
-        </table>    
+        </table>  
+
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+           Comments
+        </h4>
+
+        <ul name="list_comments"  style="list-style-type:none; padding-left:0">
+            <li ng-repeat="member in topic.members ">
+                <div ng-if="hasComment(member)">
+                    {{member.name}} says:   {{member.comments}}
+                </div>
+            </li>
+        </ul>
     </script>
 
     <script type="text/ng-template" id="memberModel.html">
@@ -198,58 +206,62 @@
             </h3>
         </div>
         <div class="modal-body">
-            <div class="row">
-                <div class="col-xs-10  col-xs-offset-1 col-md-10 col-md-offset-1">
-                    <h4>
-                        <svg width='10' height='10'>
-                            <circle cx='5' cy='4' r='3' class='bluedot'/>
-                        </svg>
-                        Your Nick Name
-                    </h4> 
-                    <div class="form-group">
-                        <input class="form-control" type="text" 
-                        placeholder="Name"
-                        ng-model="memberName">
-                    </div>  
-                    <h4>
-                        <svg width='10' height='10'>
-                            <circle cx='5' cy='4' r='3' class='bluedot'/>
-                        </svg>
-                        Candidate Dates
-                    </h4> 
-
-                    <ul name="list_candDate"  style="list-style-type:none; padding-left:0">
-                        <li ng-repeat="select in selections track by $index">
-                            <div class="row">
+            <form name="selectForm">
+                <div class="row">
+                    <div class="col-xs-10  col-xs-offset-1 col-md-10 col-md-offset-1">
+                        <h4>
+                            <svg width='10' height='10'>
+                                <circle cx='5' cy='4' r='3' class='bluedot'/>
+                            </svg>
+                            Your Nick Name
+                        </h4> 
+                        <div class="form-group">
+                            <div class="controls">
+                                <input class="form-control" type="text" 
+                                    placeholder="Name"
+                                    ng-model="memberName" 
+                                    unique-username="" required />
+                                <span class="error-container" ng-show="selectForm.$error.unique">Your Nick name is already used...</span>
+                            </div>    
+                        </div>  
+                        <h4>
+                            <svg width='10' height='10'>
+                                <circle cx='5' cy='4' r='3' class='bluedot'/>
+                            </svg>
+                            Candidate Dates
+                        </h4> 
+                        <ul name="list_candDate"  style="list-style-type:none; padding-left:0">
+                            <li ng-repeat="select in selections track by $index">
+                                <div class="row">
                                     <div class="col-xs-4 col-md-4 Center-Container"  style="height:34px">
                                             <div class="Absolute-Center">
                                             {{getFullDate(candidateDates[$index])}} 
                                             </div>
                                     </div>
                                     <div class="btn-group col-xs-8  text-left col-md-8 text-left">
-                                        <label class="btn btn-primary btn-outline" ng-model="dateSelected" btn-radio="'OK'">OK!</label>
-                                        <label class="btn btn-warning btn-outline" ng-model="dateSelected" btn-radio="'MIDDEL'">Maybe?</label>
-                                        <label class="btn btn-danger btn-outline" ng-model="dateSelected" btn-radio="'NG'">NG..</label>
+                                        <label class="btn btn-primary btn-outline" ng-model="select.willing" btn-radio="'OK'">OK!</label>
+                                        <label class="btn btn-warning btn-outline" ng-model="select.willing" btn-radio="'MIDDLE'">Maybe?</label>
+                                        <label class="btn btn-danger btn-outline" ng-model="select.willing" btn-radio="'NG'">NG..</label>
                                     </div>
-                                </div>
-                           </div>
-                        </li>
-                    </ul>
+                               </div>
+                            </li>
+                        </ul>
 
-                    <h4>
-                        <svg width='10' height='10'>
-                            <circle cx='5' cy='4' r='3' class='bluedot'/>
-                        </svg>
-                        Comments
-                    </h4> 
-                    <div class="form-group">
-                        <input class="form-control" type="text" 
-                        placeholder="Say something"
-                        ng-model="memberComment">
-                    </div>  
+                        <h4>
+                            <svg width='10' height='10'>
+                                <circle cx='5' cy='4' r='3' class='bluedot'/>
+                            </svg>
+                            Comments
+                        </h4> 
+                        <div class="form-group">
+                            <input class="form-control" type="text" 
+                            placeholder="Say something"
+                            ng-model="memberComment"/>
+                        </div>  
 
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
         <div class="modal-footer ">
             <button class="btn btn-primary" ng-click="ok()"><span class="glyphicon glyphicon-ok-sign"></span>Confirm</button>

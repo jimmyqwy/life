@@ -149,3 +149,6 @@
   position: absolute;
   top: 0; left: 0; bottom: 0; right: 0;
 }
+
+/*Form validation error container*/
+form .error-container { color: #bb1f34; font-size: 1.2em; margin: 0.9em 0; }
