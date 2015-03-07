@@ -1,6 +1,7 @@
 svg .bluedot
 {
-    fill: rgba(0, 0, 255, 0.75);
+    /* fill: rgba(0, 0, 255, 0.75); */
+    fill: #2580db;
 }
 
 svg .strokecircle

@@ -20,7 +20,7 @@ WEEKDAY[6] = "Sat.";
 */
 
 // [] dependency ui.router
-MyApp = angular.module('betterLife',['ui.router']) ;
+MyApp = angular.module('betterLife',['ui.router','ui.bootstrap']) ;
 
 // config -> html template
 MyApp
@@ -50,7 +50,7 @@ MyApp.factory('topicsFactory',
             var service = {};
 
             // Data structure
-            // {ID: { title / description / candidateDates / members } }
+            // {ID: { title / desc / dates / members } }
             // members: memberID / attendance / comments
             var _topics = {};
 
@@ -159,13 +159,39 @@ MyApp.controller('MainCtrl', [
 MyApp.controller('TopicsCtrl', [
     '$scope',
     '$stateParams',
+    '$modal',
     'topicsFactory',
-    function($scope, $stateParams, topicsFactory) {
+    function($scope, $stateParams, $modal, topicsFactory) {
         $scope.topicID = $stateParams.id;
         $scope.topic = topicsFactory.getTopic($scope.topicID);
+        $scope.selectedResults=[];
 
         $scope.load = function() {
-            //
+            $(function() {
+                function endEdit(e) {
+                    var input = $(e.target),
+                        label = input && input.prev();
+
+                    label.text(input.val() === '' ? defaultText : input.val());
+                    input.hide();
+                    label.show();
+                }
+
+                $('#clickedit').hide()
+                .focusout(endEdit)
+                .keyup(function (e) {
+                    if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+                        endEdit(e);
+                        return false;
+                    } else {
+                        return true;
+                    }
+                })
+                .prev().click(function () {
+                    $(this).hide();
+                    $(this).next().show().focus();
+                });
+            });
         };
 
         $scope.getFullDate = function (date) {
@@ -184,7 +210,9 @@ MyApp.controller('TopicsCtrl', [
         $scope.initialAttendance = function () {
             var attendances = [];
             for ( var dateIdx  in $scope.topic.dates) {
-                attendances.push(1);
+                var att = Math.floor((Math.random() * 3) -1);
+                attendances.push(att);
+                console.log(att);
             }
             return attendances;
         };
@@ -212,6 +240,26 @@ MyApp.controller('TopicsCtrl', [
             return newMember;
         };
 
+        $scope.addJoinMember = function (size) {
+            var modalInstance = $modal.open({
+              templateUrl: 'memberModel.html',
+              controller: 'MemberModalInstanceCtrl',
+              size: size,
+              resolve: {
+                candidateDates: function () {
+                    return $scope.topic.dates;
+                }
+              }
+            });
+
+            modalInstance.result.then(function (selectedResults) {
+              $scope.selectedResults = selectedResults;
+              console.log($scope.selectedResults);
+            }, function () {
+              console.info('Modal dismissed at: ' + new Date());
+            });
+        };
+
         // Add adminstrator
         // topicsFactory.topic have referece to current $scope.topic
         // add members will also add to topicFactory
@@ -219,3 +267,35 @@ MyApp.controller('TopicsCtrl', [
         $scope.load();
     }
 ]);
+
+
+MyApp.controller('MemberModalInstanceCtrl',
+    function ($scope, $modalInstance, candidateDates) {
+        $scope.candidateDates = candidateDates;
+        $scope.selections = [];
+        for (var date in candidateDates) {
+            $scope.selections.push({
+                date : date,
+                selected: 0
+            });
+        }
+       /*
+        $scope.candidateDates = candidateDates;
+        $scope.selected = {
+        item: $scope.items[0]
+        };
+        */
+         $scope.getFullDate = function (date) {
+            //console.log(date);
+            var weekday = WEEKDAY[new Date(date).getDay()];
+            return date + " (" + weekday + ")";
+        };
+
+        $scope.ok = function () {
+            $modalInstance.close($scope.selections);
+        };
+
+        $scope.cancel = function () {
+            $modalInstance.dismiss('cancel');
+        };
+});
