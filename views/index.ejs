@@ -1,0 +1,273 @@
+<html>
+<head>
+    <title>Let's go party!</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/svg.css" rel="stylesheet">
+    <link href="css/my.css" rel="stylesheet">
+    <script src="js/jquery-1.11.2.min.js"></script>
+    <!--<script src="js/bootstrap.min.js"></script>-->
+    <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/angular-ui-router.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/ui-bootstrap-tpls-0.12.0.js"></script>
+
+    <link href="lib/datepicker/jquery.datepick.css" rel="stylesheet">
+    <script src="lib/datepicker/jquery.plugin.js"></script>
+    <script src="lib/datepicker/jquery.datepick.js"></script>
+
+    <script type="text/javascript" src="/javascripts/angularApp.js"></script>
+    <script type="text/javascript" src="/javascripts/lifedirectives.js"></script>
+
+    <style type="text/css">
+        .embed + img { position: relative; left: 0px; top: 0px; }
+        img.trigger {   
+            margin: 0.25em;  vertical-align: top;
+        }
+        .glyphicon-thumbs-up { cursor:pointer } 
+    </style>
+</head>
+<body id="angularBody" ng-app="betterLife">
+    <div class="row">
+        <div class="col-xs-8  col-xs-offset-2 col-md-8 col-md-offset-2">
+        <!--<div class="col-md-5">-->
+            <ui-view></ui-view>
+            <!--Whenever ui-router detects a route change, it will place the new state's template inside the tag and initialize the controller we specified in our state configuration. -->
+        </div>
+    </div>
+
+    <script type="text/ng-template" id="/home.html">
+        <div class="page-header">
+            <h1> Let's go party! </h1>
+        </div>
+        <form ng-submit = "addTopic()">
+            <h4>
+                <svg width='10' height='10'>
+                    <circle cx='5' cy='5' r='3' class='bluedot'/>
+                </svg>
+                Topic
+            </h4>
+            <div class="form-group">
+                <div class="icon-addon addon-lg">
+                    <input id= "titleInput" type="text"
+                        class="form-control form-control-input"
+                        placeholder="Title of topic" 
+                        ng-model="topicTitle">
+                    <label for="titleInput" class="glyphicon glyphicon-send" rel="tooltip"></label>
+                </div>
+            </div>
+
+            <h4>
+                <svg width='10' height='10'>
+                    <circle cx='5' cy='5' r='3' class='bluedot'/>
+                </svg>
+                Description
+            </h4>
+            <div class="form-group">
+                <div class="icon-addon addon-lg">
+                    <textarea id="descInput"
+                        rows="10" 
+                        class="form-control"
+                        placeholder="Details" 
+                        style="resize:none" 
+                        ng-model="topicDescription">
+                    </textarea>
+                    <label for="descInput" class="glyphicon glyphicon-info-sign" rel="tooltip"></label>
+                </div>
+            </div>
+
+            <h4>
+                <svg width='10' height='10'>
+                    <circle cx='5' cy='5' r='3' class='bluedot'/>
+                </svg>
+                Candidates Date 
+            </h4>
+            <div class="form-group">
+                <div class="icon-addon addon-lg">
+                    <textarea  
+                        id="inlineDatepicker"
+                        name="input_candDate" 
+                        class="embed form-control"  
+                        style="resize:none" 
+                        rows = "2"
+                        cols = "30">
+                    </textarea>
+                    <label for="inlineDatepicker" class="glyphicon glyphicon-calendar" rel="tooltip"></label>
+                </div>
+            </div>
+        
+           <button type="submit" class="btn btn-primary btn-outline">
+                <span class="glyphicon glyphicon-thumbs-up"></span>
+                Create
+            </button>
+        </form> 
+    </script>
+
+    <script type="text/ng-template" id="/topics.html">
+        <div class="page-header">
+            <h1> Let's go party! </h1>
+        </div>
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            {{topic.title}}
+        </h4>
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            Description
+        </h4>
+       <p>
+            {{topic.desc}}
+        </p>
+
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            Candidate Dates
+        </h4>
+        <ul name="list_candDate" style="list-style-type:none; padding-left:0">
+            <li ng-repeat="date in topic.dates track by $index">
+                {{getFullDate(date)}}
+            </li>
+        </ul>
+        <div class="row">
+            <div class="col-xs-6  col-md-6">
+                <h4>
+                    <svg width='10' height='10'>
+                        <circle cx='5' cy='4' r='3' class='bluedot'/>
+                    </svg>
+                    Members
+                </h4>
+            </div>
+            <div class="col-xs-6  text-right col-md-6 text-right">
+                <button type="submit" class="btn btn-primary btn-outline" ng-click="addJoinMember()">
+                <span class="glyphicon glyphicon-thumbs-up"></span>
+                I wanna Join ! 
+                </button>
+            </div>
+        </div>
+       
+        <table id="memberTable" class="table table-bordred table-striped">
+            <tr>
+                <th> Name </th>
+                <th ng-repeat="date in topic.dates track by $index">
+                    {{getFullDate(date)}}
+                </th>
+            </tr>
+            <tr ng-repeat="member in topic.members ">
+                <td>
+                    {{member.name}}
+                </td>
+                <td ng-repeat="date in topic.dates track by $index">
+                    <div ng-if="member.attendance[$index] == 1">
+                        <button type="button" class="btn btn-primary btn-sucess">
+                        <span class="glyphicon glyphicon-ok-sign"></span> 
+                        </button>
+                    </div>
+                    <div ng-if="member.attendance[$index] == 0">
+                         <button type="button" class="btn btn-primary btn-warning">
+                        <span class="glyphicon glyphicon-question-sign"></span>
+                        </button>
+                    </div>
+                    <div ng-if="member.attendance[$index] == -1">
+                         <button type="button" class="btn btn-primary btn-danger">
+                        <span class="glyphicon glyphicon-remove-sign"></span>
+                        </button>
+                    </div>
+                     <!--<div class="btn-group"></div>-->
+                </td>
+            </tr>            
+        </table>  
+
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+           Comments
+        </h4>
+
+        <ul name="list_comments"  style="list-style-type:none; padding-left:0">
+            <li ng-repeat="member in topic.members ">
+                <div ng-if="hasComment(member)">
+                    {{member.name}} says:   {{member.comments}}
+                </div>
+            </li>
+        </ul>
+    </script>
+
+    <script type="text/ng-template" id="memberModel.html">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+            <h3 class="modal-title custom_align" id="Heading">
+                Arrange your schedule
+            </h3>
+        </div>
+        <div class="modal-body">
+            <form name="selectForm">
+                <div class="row">
+                    <div class="col-xs-10  col-xs-offset-1 col-md-10 col-md-offset-1">
+                        <h4>
+                            <svg width='10' height='10'>
+                                <circle cx='5' cy='4' r='3' class='bluedot'/>
+                            </svg>
+                            Your Nick Name
+                        </h4> 
+                        <div class="form-group">
+                            <div class="controls">
+                                <input class="form-control" type="text" 
+                                    placeholder="Name"
+                                    ng-model="memberName" 
+                                    unique-username="" required />
+                                <span class="error-container" ng-show="selectForm.$error.unique">Your Nick name is already used...</span>
+                            </div>    
+                        </div>  
+                        <h4>
+                            <svg width='10' height='10'>
+                                <circle cx='5' cy='4' r='3' class='bluedot'/>
+                            </svg>
+                            Candidate Dates
+                        </h4> 
+                        <ul name="list_candDate"  style="list-style-type:none; padding-left:0">
+                            <li ng-repeat="select in selections track by $index">
+                                <div class="row">
+                                    <div class="col-xs-4 col-md-4 Center-Container"  style="height:34px">
+                                            <div class="Absolute-Center">
+                                            {{getFullDate(candidateDates[$index])}} 
+                                            </div>
+                                    </div>
+                                    <div class="btn-group col-xs-8  text-left col-md-8 text-left">
+                                        <label class="btn btn-primary btn-outline" ng-model="select.willing" btn-radio="'OK'">OK!</label>
+                                        <label class="btn btn-warning btn-outline" ng-model="select.willing" btn-radio="'MIDDLE'">Maybe?</label>
+                                        <label class="btn btn-danger btn-outline" ng-model="select.willing" btn-radio="'NG'">NG..</label>
+                                    </div>
+                               </div>
+                            </li>
+                        </ul>
+
+                        <h4>
+                            <svg width='10' height='10'>
+                                <circle cx='5' cy='4' r='3' class='bluedot'/>
+                            </svg>
+                            Comments
+                        </h4> 
+                        <div class="form-group">
+                            <input class="form-control" type="text" 
+                            placeholder="Say something"
+                            ng-model="memberComment"/>
+                        </div>  
+
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer ">
+            <button class="btn btn-primary" ng-click="ok()"><span class="glyphicon glyphicon-ok-sign"></span>Confirm</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </script>
+
+</body>
+</html>
