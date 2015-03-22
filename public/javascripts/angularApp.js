@@ -116,7 +116,7 @@ MyApp.controller('MainCtrl', [
         $scope.load = function() {
             // all jquery could be avaiable after angular scope loaded
             $(function() {
-                $('#inlineDatepicker').datepick(
+                $('#inlineDatepick').datepick(
                     {
                         multiSelect:999,
                         monthsToShow:2,
@@ -129,6 +129,12 @@ MyApp.controller('MainCtrl', [
         };
 
         $scope.addTopic = function () {
+
+            if (!$scope.candidateDates ||
+                $scope.candidateDates === [] ||
+                $scope.candidateDates.length === 0 ) {
+                $scope.selectDate();
+            }
             if ( !$scope.topicTitle )  {  return ;    }
             $scope.topicID = topicsFactory.getTopicVolume() + 1;
             
@@ -141,7 +147,7 @@ MyApp.controller('MainCtrl', [
 
         $scope.selectDate = function(dates) {
             if (! dates || dates === '') {
-                return ;
+                dates=[new Date()];
             }
             $scope.candidateDates = [];
             for (var i = 0; i < dates.length; i++) {
@@ -217,7 +223,7 @@ MyApp.controller('TopicsCtrl', [
               resolve: {
                 topicID: function() {
                     return $scope.topicID;
-                }, 
+                },
                 currentMembers: function() {
                     return $scope.topic.members;
                 },
@@ -259,6 +265,7 @@ MyApp.controller('MemberModalInstanceCtrl',
         $scope.currentMembers = currentMembers;
         $scope.candidateDates = candidateDates;
         $scope.selections = [];
+        $scope.submit_valid = false;
         for (var idx = 0; idx < candidateDates.length; idx++ ) {
             $scope.selections.push({
                 date : candidateDates[idx],
@@ -297,10 +304,8 @@ MyApp.controller('MemberModalInstanceCtrl',
             return willingResults;
         };
 
-        $scope.ok = function () {
-            if (memberExist($scope.memberName) === true) {
-                alert("Nick name is already used... \nPlease choose another one!");
-            } else {
+        $scope.confirm = function () {
+            if ($scope.selectForm.$valid ) {
                 var willingResults = encodeSelect($scope.selections);
                 $modalInstance.close([$scope.memberName,
                                                         willingResults,
@@ -332,8 +337,10 @@ MyApp.directive('uniqueUsername',[
                             }
                         }
                     if (topic.members && !found) {
+                        scope.submit_valid = true;
                         ngModel.$setValidity('unique', true);
                     } else {
+                        scope.submit_valid = false;
                         ngModel.$setValidity('unique', false);
                     }
                 }
