@@ -52,7 +52,7 @@ MyApp.factory('topicsFactory',
 
             // Data structure
             // {ID: { title / desc / dates / members } }
-            // members: memberID / attendance / comments
+            // members: memberID / name / attendance / comments
             var _topics = {};
 
             var isValidID = function(id) {

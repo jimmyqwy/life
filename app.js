@@ -5,6 +5,13 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+// database mongodb - before routes
+var mongoose = require('mongoose');
+require('./models/Topics');
+require('./models/Members');
+mongoose.connect('mongodb://localhost/mean_party');
+
+// routes -> index.js / users.js under routes and so on
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
