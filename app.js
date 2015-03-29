@@ -9,7 +9,8 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 require('./models/Topics');
 require('./models/Members');
-mongoose.connect('mongodb://localhost/mean_party');
+#mongoose.connect('mongodb://localhost/mean_party');
+mongoose.connect(mongodb://jimmyqwy:Aaaa1111!@ds041228.mongolab.com:41228/heroku_app34974984)
 
 // routes -> index.js / users.js under routes and so on
 var routes = require('./routes/index');
