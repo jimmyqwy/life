@@ -43,4 +43,9 @@ router.param('topic', function(req, res, next, id) {
     });
 });
 
+// router: get topic by id
+router.get('/topics/:topic', function(req,res) {
+    res.json(req.topic);
+});
+
 module.exports = router;
