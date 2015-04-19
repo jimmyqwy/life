@@ -35,6 +35,34 @@
         </div>
     </div>
 
+    <script type="text/ng-template" id="/mypage.html">
+        <div class="page-header">
+            <h1> ~ My Events ~ </h1>
+        </div>
+        <form ng-submit = "createTopic()">
+             <div class="form-group">
+                <div class="icon-addon addon-lg">
+                    <ul name="list_topic" style="list-style-type:none; padding-left:0">
+                        <li ng-repeat='(id, topic) in topics'>
+                            <h4>
+                                <svg width='10' height='10'>
+                                     <circle cx='5' cy='5' r='3' class='bluedot'/>
+                                 </svg>
+                                 {{topic.title}} 
+                            </h4>
+                            <h5> {{topic.dates}} </h5>
+                            <h5> {{topic.description}}</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-outline">
+                <span class="glyphicon glyphicon-thumbs-up"></span>
+                Create New Party
+            </button>
+        </form>
+    </script>
+
     <script type="text/ng-template" id="/home.html">
         <div class="page-header">
             <h1> Let's go party! </h1>
@@ -122,7 +150,7 @@
             Description
         </h4>
        <p>
-            {{topic.desc}}
+            {{topic.description}}
         </p>
 
         <h4>

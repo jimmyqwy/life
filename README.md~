@@ -23,5 +23,6 @@ POST /topics/{topicID}/join/{memberID}  - add an entry (attendance and comments)
 GET /users/ - get all members
 POST /users/ - add a member 
 GET /users/{memberID}  - get member Info
-GET /users/{memberID}/entries - get all entries
+
+GET /users/{memer}
 

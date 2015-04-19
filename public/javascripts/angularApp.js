@@ -30,6 +30,17 @@ MyApp
     '$urlRouterProvider',
     function($stateProvider, $urlRouterProvider) {
         $stateProvider
+            .state('mypage', {
+              url: '/mypage',
+              templateUrl: '/mypage.html',
+              controller: 'MyPageCtrl',
+              resolve: {
+                postPromise: [ 'topicsFactory', function (topics) {
+                    return topics.getALLTopics();
+                }]
+              }
+            });
+        $stateProvider
             .state('home', {
               url: '/home',
               templateUrl: '/home.html',
@@ -39,67 +50,121 @@ MyApp
             .state('topics', {
               url: '/topics/{id}',
               templateUrl: '/topics.html',
-              controller: 'TopicsCtrl'
+              controller: 'TopicsCtrl',
+              resolve: {
+                topic: ['$stateParams', 'topicsFactory', function($stateParams, topicsFactory){
+                    return topicsFactory.getRestfulTopic($stateParams.id);
+                }]
+              }
             });
-        $urlRouterProvider.otherwise('home');
+        //$urlRouterProvider.otherwise('home');
+        $urlRouterProvider.otherwise('mypage');
     }
 ]);
 
 // topics factory
-MyApp.factory('topicsFactory',
-        function() {
-            var service = {};
+MyApp.factory('topicsFactory', ['$http',
+        function($http) {
+            var service = {
+                // Data structure
+                // {ID: { title / desc / dates / members } }
+                // members: memberID / name / attendance / comments
+                _topics : {}
+            };
 
-            // Data structure
-            // {ID: { title / desc / dates / members } }
-            // members: memberID / name / attendance / comments
-            var _topics = {};
+            // get from database through http restful API
+            service.getALLTopics = function() {
+                return $http.get('/topics').success(function(data) {
+                    for (var i = 0; i < data.length; i++) {
+                        service._topics[data[i]._id] = data[i];
+                    }
+                });
+            };
+
+            // create a new topic through restful API
+            service.createTopic = function(topic, successCallback) {
+                return $http.post('/topics', topic).success(function(data) {
+                    service._topics[data._id] = data;
+                    successCallback(data);
+                });
+            };
+            service.createTopic = function(id, title, description, candidateDates, successCallback) {
+                var newTopic = {
+                    title : title,
+                    description: description,
+                    dates: candidateDates,
+                    members: []
+                };
+                return $http.post('/topics', newTopic).success(function(data) {
+                    service._topics[data._id] = data;
+                    successCallback(data);
+                });
+            };
+
+            // get topic through restful API
+            service.getRestfulTopic = function(id) {
+                console.log(id);
+                return $http.get('/topics/' + id).then(function(res) {
+                    console.log(res.data);
+                    return res.data;
+                });
+            };
 
             var isValidID = function(id) {
-                 if ( id in _topics ) {
+                 if ( id in service._topics ) {
                     return true;
                 }
                 return false;
             };
 
             service.getTopicVolume = function () {
-                return Object.keys(_topics).length;
+                return Object.keys(service._topics).length;
             };
 
              // get attributes from a specific topicID
             service.getTopic = function(topicID) {
                 if ( isValidID(topicID) ) {
-                    return _topics[topicID];
+                    return service._topics[topicID];
                 }
             };
-
-            service.addTopic = function(id, title, description, candidateDates) {
-                var newTopic = {
-                    title : title,
-                    desc: description,
-                    dates: candidateDates,
-                    members: []
-                };
-                _topics[id] = newTopic;
-                return newTopic;
-            };
-
+            
             service.deleteTopic = function(topicID) {
                 if ( isValidID(topicID) ) {
-                    //_topics.splice(id, 1) ;      //  remove the element
-                    delete _topics[topicID];
+                    //service_topics.splice(id, 1) ;      //  remove the element
+                    delete service._topics[topicID];
                 }
             };
 
             // add members for a specific topic
             service.addMembers = function ( topicID, members ) {
                 if ( isValidID(topicID) ) {
-                    _topics[topicID].members = members;
+                    service._topics[topicID].members = members;
                 }
             };
             return service;
         }
-);
+]);
+
+// MyPageCtrl with home url , and pattern
+MyApp.controller('MyPageCtrl', [
+    '$scope',
+    '$state',
+    'topicsFactory',
+    function($scope, $state, topicsFactory) {
+        $scope.topics = topicsFactory._topics;
+        $scope.load = function() {
+            // all jquery could be avaiable after angular scope loaded
+        };
+
+        $scope.createTopic = function () {
+            // go to 'topics' template view  -> members
+            $state.go('home');
+        };
+
+        // load 
+        $scope.load();
+    }
+]);
 
 // MainCtrl with home url , and pattern
 MyApp.controller('MainCtrl', [
@@ -137,12 +202,16 @@ MyApp.controller('MainCtrl', [
             }
             if ( !$scope.topicTitle )  {  return ;    }
             $scope.topicID = topicsFactory.getTopicVolume() + 1;
-            
-            topicsFactory.addTopic($scope.topicID.toString(), $scope.topicTitle,
-                $scope.topicDescription, $scope.candidateDates);
 
-            // go to 'topics' template view  -> members
-            $state.go('topics', {'id' : $scope.topicID});
+            cb_topicCreated = function (data) {
+                // go to 'topics' template view
+                $state.go('topics', {'id' : data._id});
+            };
+
+            topicsFactory.createTopic(
+                $scope.topicID.toString(), $scope.topicTitle,
+                $scope.topicDescription, $scope.candidateDates,
+                cb_topicCreated);  // if topic created succefully, go to the topic created page
         };
 
         $scope.selectDate = function(dates) {
@@ -168,9 +237,12 @@ MyApp.controller('TopicsCtrl', [
     '$stateParams',
     '$modal',
     'topicsFactory',
-    function($scope, $stateParams, $modal, topicsFactory) {
-        $scope.topicID = $stateParams.id;
-        $scope.topic = topicsFactory.getTopic($scope.topicID);
+    'topic',   // get from resovle at state provider
+    function($scope, $stateParams, $modal, topicsFactory, topic) {
+        //$scope.topicID = $stateParams.id;
+        //$scope.topic = topicsFactory.getTopic($scope.topicID);
+        $scope.topic = topic;
+        $scope.topicID = $scope.topic._id;  // system id
         $scope.selectedResults=[];
 
         $scope.load = function() {
