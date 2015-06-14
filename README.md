@@ -1,5 +1,5 @@
 # Life app
-https://travis-ci.org/jimmyqwy/life.svg?branch=master
+[![Build Status](https://travis-ci.org/jimmyqwy/life.svg?branch=master)](https://travis-ci.org/jimmyqwy/life)  
 use MEAN
 Angular JS 
 express framework
